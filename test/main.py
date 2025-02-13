@@ -1,56 +1,35 @@
+import sys
+import os
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+common_dir = os.path.join(current_dir, '..', 'common')
+sys.path.append(common_dir)
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from common.get_driver import get_chrome_driver
-import common.common as common
-import pandas_test
-import pyautogui
-import time
 
-# 포트 및 데이터 디렉토리 설정
-n_port_dir = [9222, r"C:/ChromeDevSession1"]  # 네이버 포트 번호
-v_port_dir = [9223, r"C:/ChromeDevSession2"]  # 배조아 포트 번호
+import get_driver
 
-# 네이버 로그인 사용될 변수 저장
-nlogin_data = pandas_test.get_login_data("naver") # 엑셀에서 로그인 데이터 가져오기
-nurl = nlogin_data.get('Url')
-nid = nlogin_data.get('Id')
-nid_path = nlogin_data.get('IdPath')
-npd = nlogin_data.get('Pd')
-npd_path = nlogin_data.get('PdPath')
-nloginpath = nlogin_data.get('LoginPath')
-# nurl = 'https://nid.naver.com/nidlogin.login?mode=form&url=https://www.naver.com/'
-# nid = 'tmdgh5979'
-# nid_path = '/html/body/div[1]/div[2]/div/div[1]/form/ul/li/div/div[1]/div/div[1]/input'
-# npd = 'hj748159'
-# npd_path = '/html/body/div[1]/div[2]/div/div[1]/form/ul/li/div/div[1]/div/div[2]/input'
-# nloginpath = '/html/body/div[1]/div[2]/div/div[1]/form/ul/li/div/div[7]/button'
+# 네이버 및 배조아 포트 설정
+N_PORT_DIR = [9222, r"C:/ChromeDevSession1"]
+V_PORT_DIR = [9223, r"C:/ChromeDevSession2"]
 
-# 배조아 로그인 사용될 변수 저장
-vlogin_data = pandas_test.get_login_data("vejoa") # 엑셀에서 로그인 데이터 가져오기
-vurl = vlogin_data.get('Url')
-vid = vlogin_data.get('Id')
-vid_path = vlogin_data.get('IdPath')
-vpd = vlogin_data.get('Pd')
-vpd_path = vlogin_data.get('PdPath')
-vloginpath = vlogin_data.get('LoginPath')
+def run_naver():
+    """네이버 크롬 드라이버 실행"""
+    try:
+        driver = get_driver.get_chrome_driver(N_PORT_DIR[0], N_PORT_DIR[1])
+        driver.implicitly_wait(10)
+        driver.get('https://www.naver.com/')
+        return "네이버 실행 완료!"
+    except Exception as e:
+        return f"네이버 실행 실패: {str(e)}"
 
-# 네이버 드라이버 연결
-naver_driver = get_chrome_driver(n_port_dir[0], n_port_dir[1])
-
-# 드라이버 기본 대기 시간 10초 설정
-naver_driver.implicitly_wait(10)
-naver_driver.get(nurl)
-
-# 네이버 로그인
-common.login(naver_driver, nid, nid_path, npd, npd_path, nloginpath)
-
-
-# 배조아 드라이버 연결
-vejoa_driver = get_chrome_driver(v_port_dir[0], v_port_dir[1])
-
-# 드라이버 기본 대기 시간 10초 설정
-vejoa_driver.implicitly_wait(10)
-
-# 배조아 로그인
-vejoa_driver.get(vurl)
-common.login(vejoa_driver, vid, vid_path, vpd, vpd_path, vloginpath)
+def run_vejoa():
+    """배조아 크롬 드라이버 실행"""
+    try:
+        driver = get_driver.get_chrome_driver(V_PORT_DIR[0], V_PORT_DIR[1])
+        driver.implicitly_wait(10)
+        driver.get('https://www.vejoa.com/')
+        return "배조아 실행 완료!"
+    except Exception as e:
+        return f"배조아 실행 실패: {str(e)}"
