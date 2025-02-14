@@ -4,8 +4,7 @@ import time
 import pyperclip
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import NoSuchElementException
-
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 
 # 다른 폴더 파일 import 하기
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -15,40 +14,48 @@ sys.path.append(common_dir)
 import common
 
 # 캡챠 우회 로그인(복붙을 이용, ex) naver... )
-def login(driver, id, idpath, pd, pdpath, loginpath): 
+def login(driver, id, idpath, pd, pdpath, loginpath, max_attempts=2): 
     # 로그인 처리
-    try :
-        time.sleep(2)
-        # 아이디 복사
-        pyperclip.copy(id)        
-        # 아이디 붙여넣기
-        driver.find_element(By.XPATH, idpath).send_keys(Keys.CONTROL + 'v')
-        time.sleep(1)
+    attempt = 0  # 로그인 시도 횟수
+    
+    while attempt < max_attempts:
+        try:
+            time.sleep(2)
+            print(f'로그인 시도 {attempt + 1}/{max_attempts}')
+            
+            # 아이디 복사 및 붙여넣기
+            pyperclip.copy(id)        
+            driver.find_element(By.XPATH, idpath).send_keys(Keys.CONTROL + 'v')
+            time.sleep(1)
 
-        # 비밀번호 복사
-        pyperclip.copy(pd)
-        secure = 'blank'
-        # 비밀번호 붙여넣기
-        driver.find_element(By.XPATH, pdpath).send_keys(Keys.CONTROL + 'v')
-        pyperclip.copy(secure)  # 비밀번호 보안을 위해 클립보드에 blank 저장
+            # 비밀번호 복사 및 붙여넣기
+            pyperclip.copy(pd)
+            secure = 'blank'
+            driver.find_element(By.XPATH, pdpath).send_keys(Keys.CONTROL + 'v')
+            pyperclip.copy(secure)  # 보안 처리
+            
+            # 로그인 버튼 클릭
+            driver.find_element(By.XPATH, loginpath).click()
+            time.sleep(1)
+            
+            # 로그인 성공 여부 확인 (예: 특정 요소가 존재하는지 검사)
+            driver.refresh()
+            attempt += 1
+            return True
         
-        # 로그인 버튼 클릭
-        driver.find_element(By.XPATH, loginpath).click()
-        time.sleep(1)
-        
-        # 새로고침
-        driver.refresh()
-        return True
-    except Exception as e:
-        print(f"페이지에서 오류 발생: {e}")
-        return False
-
+        except (NoSuchElementException, TimeoutException) as e:
+            print(f"로그인 시도 실패 ({attempt + 1}/{max_attempts}): {e}")
+            attempt += 1
+            time.sleep(2)  # 잠시 대기 후 재시도
+    
+    # 5번 시도 후에도 실패하면 예외 발생
+    raise Exception("로그인 실패: 계정 정보 확인 필요")
 
         
 # 웹사이트 열기 및 로그인 시도 함수
 def open_and_login(driver, url, login_id, login_id_form, login_pass, login_pass_form, login_btn, admin_check):
     # 반복할 최대 횟수
-    MAX_ATTEMPTS = 10
+    MAX_ATTEMPTS = 2
     # 시도 횟수 초기화
     attempts = 0
 
@@ -89,6 +96,8 @@ def check_log_pass(driver, site_url, admin_check, open_url, login_id, login_id_f
             # 사이트 접속 후 로그인
             admin_login_ok = open_and_login(driver, open_url, login_id, login_id_form, login_pass, login_pass_form, login_btn, admin_check)
             print(admin_login_ok)
+            if admin_login_ok == False :
+                raise ValueError("로그인 실패 에러")
             break        
         # 로그인 되어있을 시
         else :
