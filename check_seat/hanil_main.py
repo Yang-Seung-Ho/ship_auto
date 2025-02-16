@@ -74,7 +74,7 @@ ha_start_select = "/html/body/div[1]/div/main/div[2]/form/fieldset/div/div[1]/di
 ha_arrive_select = "/html/body/div[1]/div/main/div[2]/form/fieldset/div/div[1]/div[3]/select"
 start_area = "완도"
 arrive_area = "제주"
-start_date = "2025-02-15"
+start_date = "2025-03-18"
 start_time = "09:20"
 
 ### -------한일 관리자 각종변수 선언 종료 -------###
