@@ -25,6 +25,7 @@ def activate_program(program_name: str):
         window.activate()
         if window.isMinimized:  # 최소화된 경우 복원
             window.restore()
+            
 
 
 def automate_seaworld_login():
@@ -68,3 +69,5 @@ def automate_seaworld_login():
     # 특정 좌표 더블 클릭
     time.sleep(0.5)
     pyautogui.doubleClick(588, 287)
+    time.sleep(3)  # 프로그램이 완전히 로드될 시간을 확보
+    
