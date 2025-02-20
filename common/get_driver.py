@@ -128,7 +128,9 @@ def get_chrome_driver(port, user_data_dir, max_retries=3):
         options = Options()
         options.add_experimental_option("debuggerAddress", f"localhost:{port}")
         options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
-
+        options.add_argument("--incognito")
+        options.add_argument("--disable-session-crashed-bubble")  # 복원 메시지 제거
+        options.add_argument("--disable-infobars")  # 불필요한 팝업 제거
         try:
             service = Service(ChromeDriverManager().install())
             driver = webdriver.Chrome(service=service, options=options)
