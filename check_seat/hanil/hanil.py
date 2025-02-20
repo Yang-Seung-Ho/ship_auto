@@ -1,6 +1,9 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 import pyautogui
 import time
 import sys
@@ -43,10 +46,14 @@ def hanil_getdata(driver, start_area, arrive_area, start_date, start_time, max_a
             # 한일 검색 적용된 주소 이동
             hanil_common.get_search(driver, start_area, arrive_area, start_date)
 
-            time.sleep(1)
+            wait = WebDriverWait(driver, 5)
+
 
             # 비회원 취소 버튼 클릭
-            driver.find_element(By.XPATH, "/html/body/div[1]/div[6]/div/div[3]/div/button[1]").click()
+            cancel_button = wait.until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[1]/div[6]/div/div[3]/div/button[1]")))
+
+            # ✅ 클릭 실행
+            cancel_button.click()
             
             # 한일 우측 배너 제거
             hanil_common.remove_hbanner(driver)
@@ -69,7 +76,7 @@ def hanil_getdata(driver, start_area, arrive_area, start_date, start_time, max_a
             # 차량 등록 버튼 클릭
             driver.find_element(By.XPATH, "/html/body/div[1]/div[4]/section/form/fieldset/div/div[1]/div[4]/div[2]/button").click()
             
-            time.sleep(5)
+            # time.sleep(5)
 
             # 잔여 차량 수 확인
             h_empty_car_data = hanil_common.extract_car_availability(driver, "vehicleRegModalTr_1_0", "id") 
