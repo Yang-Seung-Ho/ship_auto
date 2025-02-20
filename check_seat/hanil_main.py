@@ -74,7 +74,7 @@ ha_start_select = "/html/body/div[1]/div/main/div[2]/form/fieldset/div/div[1]/di
 ha_arrive_select = "/html/body/div[1]/div/main/div[2]/form/fieldset/div/div[1]/div[3]/select"
 start_area = "완도"
 arrive_area = "제주"
-start_date = "2025-03-18"
+start_date = "2025-03-19"
 start_time = "09:20"
 
 ### -------한일 관리자 각종변수 선언 종료 -------###
@@ -88,29 +88,6 @@ site_url3 = "https://hanilexpress.co.kr/"
 
 
 ### ------- 한일 홈페이지 각종변수 선언 종료 -------###
-
-
-
-
-### 한일 홈페이지 시작 ###
-
-try:
-    # 한일 드라이버 연결 ## 에러 시 띄우고 중단(EX_ 메모장(에러 내용) 열어서 보여주든가 등등)
-    h_driver = get_chrome_driver(h_port_dir[0], h_port_dir[1])
-
-    # 드라이버 기본 대기 시간 설정
-    h_driver.implicitly_wait(wait_time)
-
-    # 한일 홈페이지 실행
-    hanil_total_data = hanil.hanil_getdata(h_driver, start_area, arrive_area, start_date, start_time, 2)
-    
-except Exception as e:
-    print(f"한일 홈페이지 드라이버 오류 발생: {e}")
-        
-
-### 한일 홈페이지 종료 ###
-
-
 
 
 # ### 배조아 관리자 시작 ###
@@ -148,40 +125,69 @@ except Exception as e:
 ### 배조아 관리자 종료 ###
 
 
+### 한일 홈페이지 시작 ###
+
+# try:
+#     # 한일 드라이버 연결 ## 에러 시 띄우고 중단(EX_ 메모장(에러 내용) 열어서 보여주든가 등등)
+#     h_driver = get_chrome_driver(h_port_dir[0], h_port_dir[1])    
+#     # 드라이버 기본 대기 시간 설정
+#     h_driver.implicitly_wait(wait_time)
+#     # 한일 홈페이지 실행
+#     hanil_total_data = hanil.hanil_getdata(h_driver, start_area, arrive_area, start_date, start_time, 2)
+    
+# except Exception as e:
+#     print(f"한일 홈페이지 드라이버 오류 발생: {e}")
+        
+### 한일 홈페이지 종료 ###
+
+
 ### 한일 관리자 시작 ###
 
 try:
-    # 한일관리자 드라이버 연결 ## 에러 시 띄우고 중단(EX_ 메모장(에러 내용) 열어서 보여주든가 등등)
+    # 한일관리자 드라이버 연결
     ha_driver = get_chrome_driver(ha_port_dir[0], ha_port_dir[1])
 
     # 드라이버 기본 대기 시간 10초 설정
     ha_driver.implicitly_wait(wait_time)
 
-    max_attempts = 5  # 최대 시도 횟수 설정
+    max_attempts = 3  # 최대 시도 횟수 설정
     attempt = 0  # 시도 횟수 추적 변수 초기화
+
+    # 로그인 확인 부분 시작
+    login.check_log_pass(
+        ha_driver, ha_site_url, ha_open_url, ha_login_id, 
+        ha_login_id_form, ha_login_pass, ha_login_pass_form, ha_login_btn
+    )
+    # 로그인 확인 완료
 
     while attempt < max_attempts:
         attempt += 1  # 시도 횟수 증가
 
-        # 로그인 확인 부분 시작
-        login.check_log_pass(ha_driver, ha_site_url, ha_admin_check, ha_open_url, ha_login_id, ha_login_id_form, ha_login_pass, ha_login_pass_form, ha_login_btn)
-        # 로그인 확인 부분 종료 => 로그인 완료
-
         # 한일관리자 객실/잔여석 데이터 가져오기   
-        a_hanil_total_data = a_hanil.a_hanil_getdata(ha_driver, start_date, ha_start_select, start_area, ha_arrive_select, arrive_area, start_time)
-        
-        if a_hanil_total_data == 'continue':
-            if attempt < max_attempts:
-                print(f"재시도 중... ({attempt}/{max_attempts})")
-                continue  # 실패하여 재시작
+        try:
+            result = a_hanil.a_hanil_getdata(
+                ha_driver, start_date, ha_start_select, start_area, 
+                ha_arrive_select, arrive_area, start_time
+            )
+
+            # ✅ 결과가 None이 아니면 성공으로 간주하고 종료
+            if result is not None:
+                print(f"데이터 수집 성공! ({attempt}/{max_attempts})")
+                break  # 반복문 종료
+            
             else:
-                print(f"최대 시도 횟수 {max_attempts}에 도달했습니다. 작업을 중단합니다.")
-                break  # 최대 시도 횟수에 도달하면 반복문 종료
-        else:
-            # print(a_hanil_total_data)
-            break  # 성공적으로 데이터를 가져왔으므로 반복문 종료
+                print(f"데이터 수집 실패. 재시도 중... ({attempt}/{max_attempts})")
+
+        except Exception as e:
+            print(f"오류 발생: {e} | 재시도 중... ({attempt}/{max_attempts})")
+
+        if attempt >= max_attempts:
+            print(f"최대 시도 횟수 {max_attempts} 도달. 작업을 중단합니다.")
+            break  # 최대 시도 횟수에 도달하면 반복문 종료
+
 except Exception as e:
-    print(f"오류 발생: {e}")    
+    print(f"오류 발생: {e}")
+
 
 ### 한일 관리자 종료 ###
 
@@ -190,11 +196,11 @@ except Exception as e:
 
 ### 한일 홈페이지, 한일 관리자에서 추출한 데이터 합병하기 ###
 # 출력 결과 확인
-if hanil_total_data : 
-    print("한일 홈페이지 객실 :", hanil_total_data)    
+# if hanil_total_data : 
+#     print("한일 홈페이지 객실 :", hanil_total_data)    
 
-if a_hanil_total_data : 
-    print("한일관리자 객실 : ", a_hanil_total_data)
+# if a_hanil_total_data : 
+#     print("한일관리자 객실 : ", a_hanil_total_data)
 
 # if hanil_total_data and a_hanil_total_data : 
 #     total_data = common.merge_dicts(hanil_total_data, a_hanil_total_data)

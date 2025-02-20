@@ -5,8 +5,10 @@ import pyperclip
 import subprocess
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support import expected_conditions as EC
 import json
 
 ### 한일 홈페이지 함수 시작 ###
@@ -40,7 +42,7 @@ def get_search(driver, start_area, arrive_area, start_date):
            f"&dptmnlName1={start_area}&artmnlName1={arrive_area}"
            f"&dateFrom1={slice_date}&adultCnt1=1&childrenCnt1=0"
            f"&childCnt1=0&petCnt1=1&vehicleCnt1=1&_csrf=")
-        
+    print(url)
     driver.get(url)
 
 
@@ -86,28 +88,42 @@ def extract_room_info(driver, ul_xpath):
     return room_availability
 
 # 차량 잔여 수 가져오기 (type = id 면 id로 구하고, name이면 data-crgnm값으로 구하기)
-def extract_car_availability(driver, value, type="id"):
+def extract_car_availability(driver, value, type="id", timeout=5):
+    """
+    특정 차량의 남은 좌석 수(data-rmncnt)를 추출하는 함수.
+    요소가 나타날 때까지 최대 5초 동안 기다림.
+
+    :param driver: Selenium WebDriver 객체
+    :param value: 검색할 요소의 ID 또는 name 값
+    :param type: 'id' 또는 'name' 중 하나 (기본값: 'id')
+    :param timeout: 최대 대기 시간 (기본값: 5초)
+    :return: 남은 좌석 수 (int) 또는 False (요소 없음)
+    """
     try:
+        wait = WebDriverWait(driver, timeout)  # 최대 5초 대기
+
         if type == "id":
-            # ID로 <tr> 요소 찾기
-            tr_element = driver.find_element(By.ID, value)
+            # ID로 요소 찾기 (최대 5초 기다림)
+            tr_element = wait.until(EC.presence_of_element_located((By.ID, value)))
+
         elif type == "name":
-            # data-crgnm 속성이 value와 일치하는 <tr> 요소 찾기
+            # data-crgnm 속성이 value와 일치하는 <tr> 요소 찾기 (최대 5초 대기)
             xpath = f"//tr[@data-crgnm='{value}']"
-            tr_element = driver.find_element(By.XPATH, xpath)
+            tr_element = wait.until(EC.presence_of_element_located((By.XPATH, xpath)))
+
         else:
             raise ValueError("type은 'id' 또는 'name'만 가능합니다.")
-        
-        # <tr> 요소의 data-rmncnt 속성 값을 가져옴
+
+        # 요소의 data-rmncnt 속성 값을 가져옴
         car_empty = tr_element.get_attribute("data-rmncnt")
-                
-        # car_empty 값을 정수로 변환
-        if car_empty is not None:
-            car_empty = int(car_empty)
-        
-        return car_empty
+
+        # 값을 정수로 변환
+        return int(car_empty) if car_empty is not None else False
+
+    except TimeoutException:
+        print(f"요소를 {timeout}초 내에 찾지 못했습니다: {value}")
+        return False
     except NoSuchElementException:
         return False
-    
 
 ### 한일 홈페이지 함수 종료 ###

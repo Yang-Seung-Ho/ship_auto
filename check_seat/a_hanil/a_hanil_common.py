@@ -16,11 +16,12 @@ def start_date_input(driver, start_date) :
     try:
         date_input = driver.find_element(By.XPATH, "/html/body/div[1]/div/main/div[2]/form/fieldset/div/div[1]/div[1]/input")
         driver.execute_script("arguments[0].setAttribute('type', 'text')", date_input)
-        time.sleep(1)
+        time.sleep(0.3)
         date_input.clear()
-        time.sleep(1)
+        time.sleep(0.3)
 
         date_input.send_keys(start_date)
+        time.sleep(0.3)
         date_input.send_keys(Keys.ENTER)
         time.sleep(1)
     except:
