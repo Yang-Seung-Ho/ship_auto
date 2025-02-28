@@ -60,6 +60,7 @@
 #         print(f"브라우저에 연결할 수 없습니다. 오류: {e}")
 #         return None
 import subprocess
+import pyautogui
 import socket
 import time
 import psutil  # 실행 중인 프로세스를 확인하는 라이브러리
@@ -138,6 +139,7 @@ def get_chrome_driver(port, user_data_dir, max_retries=3):
             driver.implicitly_wait(10)  # 페이지 로드 대기
             driver.maximize_window()
             print("Chrome 드라이버 연결 성공!")
+            pyautogui.press('esc')
             return driver  # 성공 시 반환
 
         except Exception as e:

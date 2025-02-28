@@ -289,12 +289,29 @@ def select_seat_and_apply(driver, required_people):
 
 
 ### 한일 고객명단 복붙하는 함수
-def paste_passenger_list(passenger_lists):
-    # 클립보드 초기화
-    pyperclip.copy('')
-    time.sleep(1)  # 페이지가 로딩될 시간을 확보
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.action_chains import ActionChains
+import pyautogui
+import pyperclip
+import time
 
-    # ESC 키 누르기 (기존 활성화된 요소 해제)
+def paste_passenger_list(driver, passenger_lists):
+    wait = WebDriverWait(driver, 10)
+    # 테이블의 특정 셀을 찾아 더블 클릭하여 활성화
+    cell_xpath = "/html/body/div[1]/div/main/div[5]/div[2]/div[1]/div/div/div[2]/div/div[1]/div[2]/table/tbody/tr[2]/td[30]"
+    cell_element = wait.until(EC.presence_of_element_located((By.XPATH, cell_xpath)))
+
+    # JavaScript를 이용해 강제로 클릭 (클릭 차단 문제 방지)
+    driver.execute_script("arguments[0].click();", cell_element)
+    time.sleep(0.2)
+
+    # 더블 클릭 수행
+    ActionChains(driver).double_click(cell_element).perform()
+    time.sleep(0.5)
+    # ESC 키를 눌러 기존 활성화된 요소 해제
+    pyautogui.press('esc')
     pyautogui.press('esc')
     time.sleep(0.5)
 
@@ -314,3 +331,188 @@ def paste_passenger_list(passenger_lists):
             time.sleep(0.2)  # 너무 빠르면 오류 발생 가능하므로 딜레이 추가
 
     print("✅ 모든 승객 명단 입력 완료.")
+
+
+
+def register_vehicle(driver, vehicle_info):
+    """
+    차량을 등록하는 함수. 차량 예약 정보에 따라 자동차와 오토바이를 등록함.
+
+    Args:
+        driver: Selenium WebDriver
+        vehicle_info (dict): 차량 예약 정보 (출발 또는 도착)
+    """
+
+    table_xpath = "/html/body/div[1]/div/main/div[4]/div[5]/div/div/div[2]/div/div[1]/div[2]/table/tbody"
+    wait = WebDriverWait(driver, 10)  # 최대 10초 대기
+
+    # 차량 등록 정보가 없으면 종료
+    if "자동차" not in vehicle_info and "오토바이" not in vehicle_info:
+        print("🚗 차량 등록 정보 없음. 진행하지 않음.")
+        return
+
+    try:
+        vehicle_types = {
+            "자동차": {"xpath": f"{table_xpath}/tr[2]/td[2]/div", "count_xpath": f"{table_xpath}/tr[2]/td[5]/div"},
+            "오토바이": {"xpath": f"{table_xpath}/tr[3]/td[2]/div", "count_xpath": f"{table_xpath}/tr[3]/td[5]/div"},
+        }
+
+        for vehicle_type, data in vehicle_types.items():
+            if vehicle_type in vehicle_info:
+                registered_vehicles = vehicle_info[vehicle_type]  # 예약된 차량 목록
+                
+                for vehicle in registered_vehicles:  # 여러 대의 차량 처리
+                    vehicle_name = vehicle["차명"]  # 차명 추출
+                    print(f"🚗 차량 '{vehicle_name}' 등록 시작...")
+
+                    # 현재 잔여 좌석 가져오기
+                    count_element = wait.until(EC.presence_of_element_located((By.XPATH, data["count_xpath"])))
+                    available_count_text = count_element.text.strip()  # "5/20" 형식
+                    print(f"💺 '{vehicle_name}' 잔여석: {available_count_text}")
+
+                    # 잔여석 파싱
+                    try:
+                        available_count = int(available_count_text.split("/")[0])  # 잔여 숫자 추출
+                    except ValueError:
+                        available_count = 0  # 변환 실패 시 기본값 0 처리
+
+                    # 잔여 좌석이 부족하면 예외 발생
+                    if available_count <= 0:
+                        raise Exception(f"🚨 예약 불가: 차량 '{vehicle_name}'의 잔여석이 부족합니다.")
+
+                    # 차량 선택 클릭
+                    vehicle_button = wait.until(EC.element_to_be_clickable((By.XPATH, data["xpath"])))
+                    vehicle_button.click()
+                    time.sleep(1)
+
+                    print(f"✅ '{vehicle_name}' 선택 완료.")
+
+                    # 차량 검색 후 클릭 및 정보 입력
+                    search_and_select_vehicle(driver, vehicle)
+
+    except Exception as e:
+        print(f"🚨 차량 등록 중 오류 발생: {e}")
+        raise  # 프로그램 중단
+
+
+### 차량 검색 후 클릭 후 정보 입력하는 함수
+def search_and_select_vehicle(driver, vehicle):
+    """
+    차량 검색창에 입력 후 검색하고, 검색 결과에서 정확히 일치하는 차량을 클릭한 후, 차량 정보를 입력하는 함수.
+
+    Args:
+        driver: Selenium WebDriver
+        vehicle (dict): 차량 정보 (차명, 차번호, 송화인, 연락처)
+    """
+
+    wait = WebDriverWait(driver, 10)  # 최대 10초 대기
+
+    vehicle_name = vehicle["차명"]  # 차명 가져오기
+
+    # 차량 검색 입력창 XPath
+    search_input_xpath = "/html/body/div[1]/div/main/div[19]/div/div[2]/div/form/fieldset/div/div[1]/div/input"
+
+    # 검색 결과 테이블 XPath
+    table_xpath = "/html/body/div[1]/div/main/div[19]/div/div[2]/form/fieldset/div[2]/div/div/div[2]/div/div[1]/div[2]/table/tbody"
+
+    # 차종이 들어있는 셀 XPath 템플릿
+    row_xpaths = [
+        f"{table_xpath}/tr[2]/td[2]/div",
+        f"{table_xpath}/tr[3]/td[2]/div",
+        f"{table_xpath}/tr[4]/td[2]/div",
+        f"{table_xpath}/tr[5]/td[2]/div"
+    ]
+
+    # 검색창에 차명 입력 후 Enter 키 입력
+    search_input = wait.until(EC.presence_of_element_located((By.XPATH, search_input_xpath)))
+    search_input.clear()
+    search_input.send_keys(vehicle_name)  # 차명 입력
+    search_input.send_keys("\n")  # Enter 키 입력 (검색 실행)
+    time.sleep(2)  # 검색 결과가 로드될 시간을 확보
+
+    # 검색된 차량 목록에서 일치하는 차량을 찾음
+    for row_xpath in row_xpaths:
+        try:
+            row_element = wait.until(EC.presence_of_element_located((By.XPATH, row_xpath)))
+            row_text = row_element.text.strip()
+
+            if row_text == vehicle_name:
+                print(f"✅ 검색 결과에서 '{vehicle_name}' 발견! 클릭합니다.")
+                
+                # 검색된 차량을 클릭
+                vehicle_row = wait.until(EC.element_to_be_clickable((By.XPATH, row_xpath)))
+                ActionChains(driver).move_to_element(vehicle_row).click().perform()
+                time.sleep(1)  # 클릭 후 대기
+                
+                # 차량 정보 입력 함수 호출
+                fill_vehicle_details(driver, vehicle)
+                return True  # 차량 선택 완료
+        except:
+            continue  # 검색 결과가 없거나 오류 발생 시 다음 항목으로 진행
+
+    # 검색 결과에서 일치하는 차량을 찾지 못한 경우
+    raise Exception(f"🚨 검색 결과에 '{vehicle_name}' 차량이 없습니다.")
+
+
+# 차량 예약자 정보 입력 함수
+def fill_vehicle_details(driver, vehicle):
+    """
+    검색한 차량을 클릭한 후, 송화인, 연락처, 차번호를 입력하는 함수.
+
+    Args:
+        driver: Selenium WebDriver
+        vehicle (dict): 선택된 차량 정보 (차명, 차번호, 송화인, 연락처)
+    """
+
+    wait = WebDriverWait(driver, 10)  # 최대 10초 대기
+
+    # 입력 필드 XPath
+    sender_input_xpath = "/html/body/div[1]/div/main/div[19]/div/div[2]/form/fieldset/table[2]/thead/tr[1]/td[1]/div/input[3]"
+    phone_input_xpath = "/html/body/div[1]/div/main/div[19]/div/div[2]/form/fieldset/table[2]/thead/tr[1]/td[2]/div/input"
+    front_plate_xpath = "/html/body/div[1]/div/main/div[19]/div/div[2]/form/fieldset/table[2]/thead/tr[2]/td[1]/div/input[1]"
+    rear_plate_xpath = "/html/body/div[1]/div/main/div[19]/div/div[2]/form/fieldset/table[2]/thead/tr[2]/td[1]/div/input[2]"
+    apply_button_xpath = "/html/body/div[1]/div/main/div[19]/div/div[2]/form/fieldset/div[1]/div/button"
+
+    # 차량 정보 가져오기
+    sender_name = vehicle["송화인"]
+    phone_number = vehicle["연락처"]
+    car_plate = vehicle["차번호"]
+
+    # 차번호 앞자리와 뒷자리 분리
+    front_plate = car_plate[:-4]  # 마지막 4자리 제외한 앞부분
+    rear_plate = car_plate[-4:]   # 마지막 4자리
+
+    print(f"🚗 차량 정보 입력: 송화인={sender_name}, 연락처={phone_number}, 차번호={front_plate}-{rear_plate}")
+
+    try:
+        # 송화인 입력 필드 초기화 후 값 입력
+        sender_input = wait.until(EC.presence_of_element_located((By.XPATH, sender_input_xpath)))
+        sender_input.clear()
+        sender_input.send_keys(sender_name)
+        print(f"✅ 송화인 입력 완료: {sender_name}")
+
+        # 연락처 입력 필드 초기화 후 값 입력
+        phone_input = wait.until(EC.presence_of_element_located((By.XPATH, phone_input_xpath)))
+        phone_input.clear()
+        phone_input.send_keys(phone_number)
+        print(f"✅ 연락처 입력 완료: {phone_number}")
+        
+        front_input = wait.until(EC.presence_of_element_located((By.XPATH, front_plate_xpath)))
+        front_input.clear()
+        front_input.send_keys(front_plate)
+
+        rear_input = wait.until(EC.presence_of_element_located((By.XPATH, rear_plate_xpath)))
+        rear_input.clear()
+        rear_input.send_keys(rear_plate)
+
+        print(f"✅ 차량 정보 입력 완료: {vehicle}")
+        
+        # 적용 버튼 클릭
+        apply_button = wait.until(EC.element_to_be_clickable((By.XPATH, apply_button_xpath)))
+        apply_button.click()
+        print("✅ 적용 버튼 클릭 완료.")                
+        time.sleep(1)
+
+    except Exception as e:
+        print(f"🚨 차량 정보 입력 중 오류 발생: {e}")
+        raise
