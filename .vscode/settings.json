@@ -1,6 +1,7 @@
 {
     "python.analysis.extraPaths": [
         "./common",
+        "./check_seat/seaworld",
         "./ship_detail/a_hanil"
     ]
 }
