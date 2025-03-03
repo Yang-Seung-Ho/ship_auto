@@ -6,7 +6,7 @@ import time
 
 # check_seat/seaworld 폴더 내의 sea_common.py를 임포트하기 위한 경로 설정
 current_dir = os.path.dirname(os.path.abspath(__file__))
-seaworld_common_dir = os.path.join(current_dir, '../check_seat/seaworld')
+seaworld_common_dir = os.path.join(current_dir, '../ship/sea_seat')
 sys.path.append(seaworld_common_dir)
 
 # sea_common.py의 함수 임포트
