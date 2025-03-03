@@ -2,6 +2,7 @@ import pyautogui
 import time
 import sys
 import os
+import pyautogui
 
 import time
 import json
@@ -109,8 +110,33 @@ def a_hanil_reservation(driver, reservation_info):
             print("🔄 왕복 예약 시작...")
             a_hanil_common.process_reservation(driver, reservation_info["도착"])
 
+
     except Exception as e:
         print(f"🚨 한일 관리자 모드에서 오류 발생: {e}")    
         raise ValueError(e)
 
+# 차량 등록 함수 #
+def a_hanil_vehicle_registration(driver, reservation_info):
+    """
+    출발 및 도착 차량이 있을 경우 등록을 실행하는 함수
+
+    Args:
+        driver: Selenium WebDriver
+        reservation_info (dict): 예약 정보
+    """
+
+    # 출발 차량 등록 확인 및 실행
+    if "출발" in reservation_info and ("자동차" in reservation_info["출발"] or "오토바이" in reservation_info["출발"]):
+        print("🚗 출발 차량 등록 시작...")
+        a_hanil_common.register_vehicle(driver, reservation_info["출발"])
+    
+    # 도착 차량 등록 확인 및 실행
+    if "도착" in reservation_info and ("자동차" in reservation_info["도착"] or "오토바이" in reservation_info["도착"]):
+        print("🏁 도착 차량 등록 시작...")
+        a_hanil_common.register_vehicle(driver, reservation_info["도착"])
+
+
+
 # 한일관리자 예약 종료
+
+
