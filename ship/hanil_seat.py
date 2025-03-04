@@ -127,16 +127,16 @@ site_url3 = "https://hanilexpress.co.kr/"
 
 ### 한일 홈페이지 시작 ###
 
-# try:
-#     # 한일 드라이버 연결 ## 에러 시 띄우고 중단(EX_ 메모장(에러 내용) 열어서 보여주든가 등등)
-#     h_driver = get_chrome_driver(h_port_dir[0], h_port_dir[1])    
-#     # 드라이버 기본 대기 시간 설정
-#     h_driver.implicitly_wait(wait_time)
-#     # 한일 홈페이지 실행
-#     hanil_total_data = hanil.hanil_getdata(h_driver, start_area, arrive_area, start_date, start_time, 2)
+try:
+    # 한일 드라이버 연결 ## 에러 시 띄우고 중단(EX_ 메모장(에러 내용) 열어서 보여주든가 등등)
+    h_driver = get_chrome_driver(h_port_dir[0], h_port_dir[1])    
+    # 드라이버 기본 대기 시간 설정
+    h_driver.implicitly_wait(wait_time)
+    # 한일 홈페이지 실행
+    hanil_total_data = hanil.hanil_getdata(h_driver, start_area, arrive_area, start_date, start_time, 2)
     
-# except Exception as e:
-#     print(f"한일 홈페이지 드라이버 오류 발생: {e}")
+except Exception as e:
+    print(f"한일 홈페이지 드라이버 오류 발생: {e}")
         
 ### 한일 홈페이지 종료 ###
 
