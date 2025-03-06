@@ -128,12 +128,56 @@ def a_hanil_vehicle_registration(driver, reservation_info):
     # 출발 차량 등록 확인 및 실행
     if "출발" in reservation_info and ("자동차" in reservation_info["출발"] or "오토바이" in reservation_info["출발"]):
         print("🚗 출발 차량 등록 시작...")
+
+        # ✅ 1) 출발 정보 가져오기
+        start_date = reservation_info["출발"]["출발일자"]
+        start_area = reservation_info["출발"]["출발지"]
+        arrive_area = reservation_info["출발"]["도착지"]
+        start_time = reservation_info["출발"]["출발시간"]
+
+        # ✅ 2) 출발 일자 입력
+        a_hanil_common.start_date_input(driver, start_date)
+
+        start_select = "/html/body/div[1]/div/main/div[2]/form/fieldset/div/div[1]/div[2]/select"
+        arrive_select = "/html/body/div[1]/div/main/div[2]/form/fieldset/div/div[1]/div[3]/select"
+
+        # ✅ 3) 출발지 및 도착지 설정
+        common.select_change_visible(driver, start_select, start_area)
+        common.select_change_visible(driver, arrive_select, arrive_area)
+
+        # ✅ 4) 타임테이블 클릭
+        a_hanil_common.h_tableClick(driver, start_time)
+
+        print("🚗 출발 날짜 입력(차량)...")
+
+        # ✅ 5) 차량 등록 실행
         a_hanil_common.register_vehicle(driver, reservation_info["출발"])
-    
+
     # 도착 차량 등록 확인 및 실행
     if "도착" in reservation_info and ("자동차" in reservation_info["도착"] or "오토바이" in reservation_info["도착"]):
         print("🏁 도착 차량 등록 시작...")
+
+        # ✅ 1) 도착 정보 가져오기
+        start_date = reservation_info["도착"]["출발일자"]
+        start_area = reservation_info["도착"]["출발지"]
+        arrive_area = reservation_info["도착"]["도착지"]
+        start_time = reservation_info["도착"]["출발시간"]
+
+        # ✅ 2) 도착 일자 입력
+        a_hanil_common.start_date_input(driver, start_date)
+
+        # ✅ 3) 출발지 및 도착지 설정
+        common.select_change_visible(driver, start_select, start_area)
+        common.select_change_visible(driver, arrive_select, arrive_area)
+
+        # ✅ 4) 타임테이블 클릭
+        a_hanil_common.h_tableClick(driver, start_time)
+
+        print("🏁 도착 날짜 입력(차량)...")
+
+        # ✅ 5) 차량 등록 실행
         a_hanil_common.register_vehicle(driver, reservation_info["도착"])
+
 
 
 
