@@ -391,6 +391,7 @@ def register_vehicle(driver, vehicle_info):
 
                     # 차량 검색 후 클릭 및 정보 입력
                     search_and_select_vehicle(driver, vehicle)
+                    # search_and_save_vehicle(driver, vehicle)
 
     except Exception as e:
         print(f"🚨 차량 등록 중 오류 발생: {e}")
@@ -496,7 +497,100 @@ def search_and_select_vehicle(driver, vehicle):
 
         time.sleep(0.5)  # 새 검색 결과 로드를 위해 대기
 
+모든 차량 리스트 저장
+# def search_and_save_vehicle(driver, vehicle):
+    """
+    차량 검색창에 입력 후 검색하고, 검색 결과에서 정확히 일치하는 차량을 클릭한 후, 차량 정보를 입력하는 함수.
 
+    Args:
+        driver: Selenium WebDriver
+        vehicle (dict): 차량 정보 (차명, 차번호, 송화인, 연락처)
+    """
+
+    wait = WebDriverWait(driver, 10)  # 최대 10초 대기
+    vehicle_name = vehicle["차명"]  # 차명 가져오기
+
+    # 차량 검색 입력창 및 버튼 XPath
+    search_input_xpath = "/html/body/div[1]/div/main/div[19]/div/div[2]/div/form/fieldset/div/div[1]/div/input"
+    search_btn_xpath = "/html/body/div[1]/div/main/div[19]/div/div[2]/div/form/fieldset/div/div[2]/button"
+
+    # 검색 결과 테이블 및 행 XPath
+    table_xpath = "/html/body/div[1]/div/main/div[19]/div/div[2]/form/fieldset/div[2]/div/div/div[2]/div/div[1]/div[2]/table/tbody"
+    row_xpaths = [
+        f"{table_xpath}/tr[2]/td[2]/div",
+        f"{table_xpath}/tr[3]/td[2]/div",
+        f"{table_xpath}/tr[4]/td[2]/div",
+        f"{table_xpath}/tr[5]/td[2]/div"
+    ]
+
+    # 검색창에 차명 입력 후 검색 실행
+    search_input = wait.until(EC.presence_of_element_located((By.XPATH, search_input_xpath)))
+    search_input.clear()
+    search_input.send_keys(vehicle_name)
+    time.sleep(0.5)
+
+    search_input.send_keys(Keys.ENTER)
+    time.sleep(0.1)
+    search_input.send_keys("\n")
+    
+    search_btn = wait.until(EC.element_to_be_clickable((By.XPATH, search_btn_xpath)))
+    time.sleep(0.1)
+    search_btn.click()
+    time.sleep(1)  # 검색 결과 로드 대기
+
+    previous_results = []  # 모든 검색 결과 저장
+
+    while True:
+        current_results = set()  # 현재 검색된 값 저장
+        first_row_clicked = False  # 첫 번째 행 클릭 여부
+
+        # 🚀 **첫 번째 행 클릭 (아래로 내리기 전에 클릭 필요)**
+        try:
+            first_row = wait.until(EC.element_to_be_clickable((By.XPATH, row_xpaths[0])))
+            first_row.click()
+            first_row_clicked = True
+            print("✅ 첫 번째 행 클릭 완료")
+            time.sleep(0.5)  # 클릭 후 대기
+        except:
+            print("🚨 첫 번째 행 클릭 실패")
+
+        # 검색된 차량 목록에서 일치하는 차량 찾기
+        for row_xpath in row_xpaths:
+            try:
+                row_element = wait.until(EC.presence_of_element_located((By.XPATH, row_xpath)))
+                row_text = row_element.text.strip()
+                current_results.add(row_text)  # 현재 행 값 저장
+
+                print(f"🔍 검색된 차량: {row_text}")
+
+                if row_text == vehicle_name:
+                    print(f"✅ 검색 결과에서 '{vehicle_name}' 발견! 클릭합니다.")
+                    vehicle_row = wait.until(EC.element_to_be_clickable((By.XPATH, row_xpath)))
+                    ActionChains(driver).move_to_element(vehicle_row).click().perform()
+                    time.sleep(1)  # 클릭 후 대기
+
+                    # 차량 정보 입력 함수 호출
+                    fill_vehicle_details(driver, vehicle)
+                    return True  # 차량 선택 완료
+
+            except:
+                continue  # 검색 결과 없거나 오류 발생 시 다음 항목 진행
+
+        # 새로운 결과를 previous_results에 추가
+        previous_results.extend(current_results)
+
+        # 🚨 중복 데이터가 나오면 종료
+        if len(set(previous_results)) < len(previous_results):  
+            print("🚨 더 이상 새로운 데이터가 없어 검색을 종료합니다.")
+            print("📌 전체 검색된 데이터:", previous_results)
+            raise Exception(f"🚨 검색 결과에 '{vehicle_name}' 차량이 없습니다.")
+
+        # 새로운 검색을 위해 아래 방향키 7번 입력 후 다시 검색
+        for _ in range(7):
+            pyautogui.press("down")  # 아래 방향키 입력
+            time.sleep(0.1)
+
+        time.sleep(0.5)  # 새 검색 결과 로드를 위해 대기
 # 차량 예약자 정보 입력 함수
 def fill_vehicle_details(driver, vehicle):
     """
