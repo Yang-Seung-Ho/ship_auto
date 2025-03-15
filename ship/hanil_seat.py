@@ -8,13 +8,16 @@ import time
 import sys
 import os
 
+import vejoa.vejoa
+import vejoa.vejoa_seat
+
 # 다른 폴더 파일 import 하기
 current_dir = os.path.dirname(os.path.abspath(__file__))
 common_dir = os.path.join(current_dir, '..', 'common')
 login_dir = os.path.join(current_dir, '..', 'login')
-a_hanil_dir = os.path.join(current_dir, '../check_seat/a_hanil')
-hanil_dir = os.path.join(current_dir, '../check_seat/hanil')
-vejoa_dir = os.path.join(current_dir, '../check_seat/vejoa')
+a_hanil_dir = os.path.join(current_dir, '../ship/a_hanil')
+hanil_dir = os.path.join(current_dir, '../ship/hanil')
+vejoa_dir = os.path.join(current_dir, '../ship/vejoa')
 
 sys.path.append(common_dir)
 sys.path.append(login_dir)
@@ -27,35 +30,15 @@ import login
 from get_driver import get_chrome_driver
 import a_hanil
 import hanil
-import vejoa
 
 
 
 # 포트 및 데이터 디렉토리 설정
-v_port_dir = [9222, r"C:/ChromeDevSession1"]  # 배조아 포트 번호
 ha_port_dir = [9223, r"C:/ChromeDevSession2"]  # 한일관리자 포트 번호
 h_port_dir = [9224, r"C:/ChromeDevSession3"]  # 한일 포트 번호
 
 # 대기 시간 변수
 wait_time = 10
-
-
-### ------- 배조아 각종변수 선언 시작 -------###
-
-v_open_url = 'https://www.vejoa.com/login?url=https%3A%2F%2Fwww.vejoa.com%2F'
-v_site_url = 'https://www.vejoa.com/admin'
-v_admin_check = '/html/body/div[3]/div[1]/div/div[1]/span/a' # 관리자 확인할 수 있는 공통요소(왼쪽 상당 Admin)
-v_login_id = "ju5979"
-v_login_id_form = "/html/body/div[3]/div[2]/div/div/div/div/div[2]/form/div[1]/div/input"
-v_login_pass = "hj748159"
-v_login_pass_form = "/html/body/div[3]/div[2]/div/div/div/div/div[2]/form/div[2]/div/input"
-v_login_btn = "/html/body/div[3]/div[2]/div/div/div/div/div[2]/form/div[3]/div[1]/button"
-# login_gubun1 =  # 요소로 찾을지 이미지로 찾을지 구분 요소 = 1, 이미지 = 2 계속 늘어날수 있음
-
-### ------- 배조아 각종변수 선언 종료 -------###
-
-
-
 
 ### -------한일 관리자 각종변수 선언 시작 -------###
 
@@ -84,44 +67,19 @@ start_time = "09:20"
 
 ### ------- 한일 홈페이지 각종변수 선언 시작 -------###
 site_url3 = "https://hanilexpress.co.kr/"
-
-
-
 ### ------- 한일 홈페이지 각종변수 선언 종료 -------###
 
 
-# ### 배조아 관리자 시작 ###
+### 배조아 관리자 시작 ###
 
-# try:
-#     # 배조아 드라이버 연결 ## 에러 시 띄우고 중단(EX_ 메모장(에러 내용) 열어서 보여주든가 등등)
-#     vejoa_driver = get_chrome_driver(v_port_dir[0], v_port_dir[1])
+# 배조아 잔여석 관리 데이터 가져오기 
+# (ship="seaworld" 면 씨월드 버튼 클릭해서 잔여석 가져오기)
+# (ship="hanil" 면 한일 버튼 클릭해서 잔여석 가져오기)
+schedule_data = vejoa.vejoa_seat.v_get_schedule_data('seaworld')
 
-#     # 드라이버 기본 대기 시간 10초 설정
-#     vejoa_driver.implicitly_wait(wait_time)
+print(schedule_data)
 
-#     # 로그인 확인 부분 시작
-#     while True:
-#         # 로그인 되어있는지 확인
-#         vejoa_driver.get(v_site_url) 
-
-#         # 로그인 안되어 있을 시       
-#         if not common.find_element(vejoa_driver, v_admin_check):
-#             # 사이트 접속 후 로그인
-#             admin_login_ok1 = login.open_and_login(vejoa_driver, v_open_url, v_login_id, v_login_id_form, v_login_pass, v_login_pass_form, v_login_btn, v_admin_check)
-#             print(admin_login_ok1)
-#             break
-        
-#         # 로그인 되어있을 시
-#         else :
-#             print("로그인 이미 되어있습니다.")
-#             break
-#     # 로그인 확인 부분 종료 => 로그인 완료
-
-#     # 이후 작성...
-
-# except Exception as e:
-#     print(f"오류 발생: {e}")    
-
+quit()
 ### 배조아 관리자 종료 ###
 
 

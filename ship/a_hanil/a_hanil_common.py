@@ -497,8 +497,8 @@ def search_and_select_vehicle(driver, vehicle):
 
         time.sleep(0.5)  # 새 검색 결과 로드를 위해 대기
 
-모든 차량 리스트 저장
-# def search_and_save_vehicle(driver, vehicle):
+# 모든 차량 리스트 저장
+def search_and_save_vehicle(driver, vehicle):
     """
     차량 검색창에 입력 후 검색하고, 검색 결과에서 정확히 일치하는 차량을 클릭한 후, 차량 정보를 입력하는 함수.
 
